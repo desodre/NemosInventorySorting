@@ -7,6 +7,7 @@
   "mixins": [],
   "client": [
     "AbstractContainerScreenMixin",
+    "FavoriteSlotRenderMixin",
     "ContainerScreenMixin",
     "ShulkerBoxScreenMixin",
     "InventoryScreenMixin"
@@ -16,4 +17,3 @@
     "defaultRequire": 1
   }
 }
-
