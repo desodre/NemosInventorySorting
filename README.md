@@ -20,7 +20,7 @@ For more information and to see how to configure the components check the [wiki]
 - Move matching items between inventories
 - Move all items between inventories
 - Drop all items from an inventory
-- Lock slots to prevent sorting, moving and dropping
+- Favorite player inventory slots to protect them from the mod's sorting, transfers and Drop All
 - Search & highlight items
 - Quick move items with **Shift + Drag**
 - Quick move half items with **Shift + Right-Click/Drag**
@@ -48,7 +48,7 @@ Set `includeHotbarByDefault` to `true` in `config/nemos-inventory-sorting/genera
 - **Scroll Up/Down**: move one item between inventory/container or inventory/hotbar
 - **Shift + Scroll Up/Down**: also allow moving the last item from the source slot
 
-The interactions can be toggled individually in `config/nemos-inventory-sorting/general.json` with `enableDragQuickMove`, `enableSplitQuickMove`, `enableScrollTransfer`, and `enableSlotLocking`.
+The interactions can be toggled individually in `config/nemos-inventory-sorting/general.json` with `enableDragQuickMove`, `enableSplitQuickMove`, `enableScrollTransfer`, and `enableFavorites`.
 
 > **Note:** Split and normal scroll actions keep at least one item in the source slot.
 
@@ -74,9 +74,17 @@ Click the search bar or press **Ctrl + [keybind]** (or **Command + [keybind]** o
 #### Filter for multiple items
 - `Stick,#minecraft:planks`
 
-### Lock Slots from Sorting
-To lock slots from sorting, use **Alt + Click/Drag** (or **Option + Click/Drag** on macOS).       
-To display locked slots, hold **Alt** (or **Option** on macOS).
+### Favorite Inventory Slots
+
+Use **Alt + Right-Click** (or **Option + Right-Click** on macOS) to toggle a favorite in your player inventory or hotbar. A small gold star stays visible in the lower-right area of the slot, beside the stack count and above the durability bar. Dragging while holding the shortcut does not toggle other slots.
+
+Favorites belong to **slots**, not individual items. Moving an item manually leaves the star on the original slot; empty favorite slots remain reserved. Favorites are shared across worlds and servers, just like the previous locked-slot configuration, and are not available in the creative inventory.
+
+The mod's Sort, Move All, Move Same, Drop All, keybinds, drag quick-move, split quick-move and scroll transfer skip favorites as both sources and destinations. Sorting does not merge items into or out of a favorite stack. Normal vanilla interactions remain available, including mouse pickup, manual Shift-click, number-key swaps and dropping with Q/Ctrl+Q or outside the inventory. This protection applies to actions performed by this mod, not server events or other mods.
+
+To disable favorites, add `"enableFavorites": false` to `config/nemos-inventory-sorting/general.json`. If omitted, the existing `enableSlotLocking` setting is used. Existing favorites are preserved in `locked-slots.json`; no migration or reset is needed.
+
+When favorites are present, the mod uses explicit pickup clicks for bulk transfers so the server cannot route items into a favorite destination. Finish moving the item on your cursor before using these transfers or Sort. Quick transfer from a crafting/result slot moves one available result at a time and requires room for the entire result.
 
 ### Dark Mode
 
