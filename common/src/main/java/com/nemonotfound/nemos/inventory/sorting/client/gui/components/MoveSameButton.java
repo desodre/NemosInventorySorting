@@ -1,6 +1,7 @@
 package com.nemonotfound.nemos.inventory.sorting.client.gui.components;
 
 import net.minecraft.core.NonNullList;
+import com.nemonotfound.nemos.inventory.sorting.client.service.FavoriteSlotService;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
@@ -47,6 +48,7 @@ public class MoveSameButton extends AbstractSingleClickButton<MoveSameButton> {
         var itemsOutOfIndexRange = getItemsOutOfIndexRange(slots, startIndex, newEndIndex);
 
         return IntStream.range(startIndex, newEndIndex)
+                .filter(slotIndex -> !FavoriteSlotService.INSTANCE.isFavorite(menu, slotIndex))
                 .mapToObj(slotIndex -> Map.entry(slotIndex, slots.get(slotIndex).getItem()))
                 .filter(itemStackEntry -> isItemInOtherContainer(itemStackEntry.getValue(), itemsOutOfIndexRange))
                 .map(Map.Entry::getKey)

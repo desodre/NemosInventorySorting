@@ -1,5 +1,7 @@
 package com.nemonotfound.nemos.inventory.sorting.client.gui.components;
 
+import com.nemonotfound.nemos.inventory.sorting.client.service.FavoriteQuickMoveService;
+import com.nemonotfound.nemos.inventory.sorting.client.service.FavoriteSlotService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -35,6 +37,12 @@ public abstract class AbstractSingleClickButton<T extends AbstractInventoryButto
         List<Integer> slotItems = getItemSlotsToInteractWith(menu);
 
         if (gameMode != null) {
+            if (clickType == ClickType.QUICK_MOVE && !isCreativeModeMenu && FavoriteSlotService.INSTANCE.hasFavorites(menu)) {
+                for (int slotIndex : slotItems) {
+                    FavoriteQuickMoveService.move(menu, slotIndex, minecraft);
+                }
+                return;
+            }
             Consumer<Integer> function = isCreativeModeMenu ?
                     (slotIndex) -> menu.clicked(slotIndex, button, clickType, player) :
                     (slotIndex) -> gameMode.handleInventoryMouseClick(containerId, slotIndex, button, clickType, player);
@@ -53,6 +61,7 @@ public abstract class AbstractSingleClickButton<T extends AbstractInventoryButto
         var slots = menu.slots;
 
         return IntStream.range(startIndex, calculateEndIndex(menu))
+                .filter(slotIndex -> !FavoriteSlotService.INSTANCE.isFavorite(menu, slotIndex))
                 .mapToObj(slotIndex -> Map.entry(slotIndex, slots.get(slotIndex).getItem()))
                 .filter(itemStackEntry -> !itemStackEntry.getValue().is(Items.AIR))
                 .map(Map.Entry::getKey)

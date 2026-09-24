@@ -3,6 +3,7 @@ package com.nemonotfound.nemos.inventory.sorting.client.service.sorting;
 import com.nemonotfound.nemos.inventory.sorting.Constants;
 import com.nemonotfound.nemos.inventory.sorting.client.model.SlotItem;
 import com.nemonotfound.nemos.inventory.sorting.client.service.SlotSwappingService;
+import com.nemonotfound.nemos.inventory.sorting.client.service.FavoriteSlotService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +12,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 import static com.nemonotfound.nemos.inventory.sorting.Constants.MAX_SORTING_CYCLES;
 
@@ -26,8 +26,8 @@ public abstract class AbstractSortingService {
     }
 
     public @NotNull List<SlotItem> sortSlotItems(AbstractContainerMenu menu, int startIndex, int endIndex) {
-        return IntStream.range(startIndex, endIndex)
-                .mapToObj(slotIndex -> new SlotItem(slotIndex, menu.slots.get(slotIndex).getItem()))
+        return FavoriteSlotService.INSTANCE.movableSlots(menu, startIndex, endIndex).stream()
+                .map(slotIndex -> new SlotItem(slotIndex, menu.slots.get(slotIndex).getItem()))
                 .filter(slotItem -> !slotItem.itemStack().isEmpty())
                 .sorted(comparator())
                 .toList();
@@ -35,11 +35,11 @@ public abstract class AbstractSortingService {
 
     abstract Comparator<SlotItem> comparator();
 
-    public Map<Integer, Integer> retrieveSlotSwapMap(List<SlotItem> slotItems, int startIndex) {
+    public Map<Integer, Integer> retrieveSlotSwapMap(List<SlotItem> slotItems, List<Integer> targetSlots) {
         Map<Integer, Integer> slotSwapMap = new LinkedHashMap<>();
 
         for (int i = 0; i < slotItems.size(); i++) {
-            int newSlot = i + startIndex;
+            int newSlot = targetSlots.get(i);
             int currentSlot = slotItems.get(i).slotIndex();
 
             if (currentSlot != newSlot) {

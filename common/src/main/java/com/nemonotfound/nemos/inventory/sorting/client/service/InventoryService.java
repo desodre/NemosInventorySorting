@@ -27,7 +27,8 @@ public class InventoryService {
         var sortedSlotItems = sortingService.sortSlotItems(menu, startIndex, endIndex);
         inventoryMergeService.mergeAllItems(menu, sortedSlotItems, containerId);
         var sortedSlotItemsAfterMerge = sortingService.sortSlotItems(menu, startIndex, endIndex);
-        var slotSwapMap = sortingService.retrieveSlotSwapMap(sortedSlotItemsAfterMerge, startIndex);
+        var targets = FavoriteSlotService.INSTANCE.movableSlots(menu, startIndex, endIndex);
+        var slotSwapMap = sortingService.retrieveSlotSwapMap(sortedSlotItemsAfterMerge, targets);
         sortingService.sortItemsInInventory(slotSwapMap, containerId);
     }
 
