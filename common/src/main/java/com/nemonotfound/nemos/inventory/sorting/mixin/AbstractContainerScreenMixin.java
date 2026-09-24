@@ -2,6 +2,7 @@ package com.nemonotfound.nemos.inventory.sorting.mixin;
 
 import com.nemonotfound.nemos.inventory.sorting.client.config.ConfigUtil;
 import com.nemonotfound.nemos.inventory.sorting.client.gui.components.ContainerFilterBox;
+import com.nemonotfound.nemos.inventory.sorting.client.service.FavoriteSlotService;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -13,6 +14,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
 import net.minecraft.world.inventory.Slot;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -35,6 +37,12 @@ public abstract class AbstractContainerScreenMixin extends Screen {
 
     @Shadow
     public abstract AbstractContainerMenu getMenu();
+    @Shadow
+    @Nullable
+    protected Slot hoveredSlot;
+
+    @Unique
+    private boolean nemosInventorySorting$favoriteClickHandled;
 
     @Unique
     private ContainerFilterBox nemosInventorySorting$containerFilterBox;
@@ -47,6 +55,23 @@ public abstract class AbstractContainerScreenMixin extends Screen {
 
     protected AbstractContainerScreenMixin(Component component) {
         super(component);
+    }
+
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    private void nemosInventorySorting$toggleFavorite(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+        if (button == 1 && Screen.hasAltDown() && hoveredSlot != null
+                && FavoriteSlotService.INSTANCE.toggle(getMenu(), hoveredSlot)) {
+            nemosInventorySorting$favoriteClickHandled = true;
+            cir.setReturnValue(true);
+        }
+    }
+
+    @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
+    private void nemosInventorySorting$finishFavoriteClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+        if (button == 1 && nemosInventorySorting$favoriteClickHandled) {
+            nemosInventorySorting$favoriteClickHandled = false;
+            cir.setReturnValue(true);
+        }
     }
 
     @Inject(method = "init", at = @At(value = "TAIL"))
