@@ -18,6 +18,7 @@ import com.nemonotfound.nemos.inventory.sorting.models.config.ComponentConfig;
 import com.nemonotfound.nemos.inventory.sorting.models.config.LockedSlotsConfig;
 import com.nemonotfound.nemos.inventory.sorting.models.config.SettingsConfig;
 import com.nemonotfound.nemos.inventory.sorting.service.HoveredSlotRangeService;
+import com.nemonotfound.nemos.inventory.sorting.service.FavoriteSlotService;
 import com.nemonotfound.nemos.inventory.sorting.service.InventoryService;
 import com.nemonotfound.nemos.inventory.sorting.service.ScrollTransferService;
 import com.nemonotfound.nemos.inventory.sorting.service.config.ConfigService;
@@ -113,6 +114,8 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
     private boolean nemosInventorySorting$displayTooltip = true;
     @Unique
     private boolean nemosInventorySorting$splitQuickMoveHandled = false;
+    @Unique
+    private boolean nemosInventorySorting$favoriteClickHandled = false;
 
     protected AbstractContainerScreenMixin(Component component) {
         super(component);
@@ -271,13 +274,16 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
 
     @Unique
     private boolean nemosInventorySorting$handleMouseClick(MouseButtonEvent event, boolean isDoubleClick) {
+        if (nemosInventorySorting$handleFavoriteClick(event)) {
+            return true;
+        }
+
         if (nemosInventorySorting$handleKeyEventForHoveredContainer(event, isDoubleClick)) {
             return true;
         }
 
         return nemosInventorySorting$handleWidgetInput(widget -> widget.mouseClicked(event, isDoubleClick))
-                || nemosInventorySorting$handleSplitQuickMove(event)
-                || nemosInventorySorting$handleSlotLocking(event);
+                || nemosInventorySorting$handleSplitQuickMove(event);
     }
 
     @Unique
@@ -298,7 +304,7 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
 
     @Unique
     private boolean nemosInventorySorting$handleMouseDrag(MouseButtonEvent event) {
-        if (nemosInventorySorting$handleDraggingSlotLock(event)) {
+        if (nemosInventorySorting$favoriteClickHandled) {
             return true;
         }
 
@@ -346,26 +352,23 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
     }
 
     @Unique
-    private boolean nemosInventorySorting$handleSlotLocking(MouseButtonEvent event) {
-        if (!SettingsConfig.INSTANCE.isSlotLockingEnabled() || !event.hasAltDown()) {
+    private boolean nemosInventorySorting$handleFavoriteClick(MouseButtonEvent event) {
+        if (!event.hasAltDown() || event.button() != InputConstants.MOUSE_BUTTON_RIGHT) {
             return false;
         }
 
-        nemosInventorySorting$handleLockedSlot();
-        return true;
-    }
-
-    @Unique
-    private boolean nemosInventorySorting$handleDraggingSlotLock(MouseButtonEvent event) {
-        if (
-                !SettingsConfig.INSTANCE.isSlotLockingEnabled()
-                        || !event.hasAltDown()
-                        || nemosInventorySorting$previousHoveredSlots.contains(hoveredSlot)
-        ) {
+        var menu = nemosInventorySorting$getMenu();
+        var clickedSlot = menu.slots.stream()
+                .filter(Slot::isActive)
+                .filter(slot -> event.x() >= leftPos + slot.x && event.x() < leftPos + slot.x + 16
+                        && event.y() >= topPos + slot.y && event.y() < topPos + slot.y + 16)
+                .findFirst().orElse(null);
+        if (!FavoriteSlotService.INSTANCE.toggle(menu, clickedSlot)) {
             return false;
         }
 
-        nemosInventorySorting$handleLockedSlot();
+        ConfigService.INSTANCE.writeConfig(true, LOCKED_SLOTS_CONFIG_PATH, LockedSlotsConfig.INSTANCE);
+        nemosInventorySorting$favoriteClickHandled = true;
         return true;
     }
 
@@ -440,6 +443,11 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
         nemosInventorySorting$previousHoveredSlot = null;
         nemosInventorySorting$displayTooltip = true;
 
+        if (nemosInventorySorting$favoriteClickHandled && event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
+            nemosInventorySorting$favoriteClickHandled = false;
+            cir.setReturnValue(true);
+        }
+
         if (nemosInventorySorting$splitQuickMoveHandled && event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
             nemosInventorySorting$splitQuickMoveHandled = false;
             cir.setReturnValue(true);
@@ -451,33 +459,6 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
         if (!nemosInventorySorting$displayTooltip) {
             ci.cancel();
         }
-    }
-
-    @Unique
-    private void nemosInventorySorting$handleLockedSlot() { //TODO: Put into LockedService
-        if (hoveredSlot == null || !nemosInventorySorting$isLockableSlot(hoveredSlot.index)) {
-            return;
-        }
-
-        var index = hoveredSlot.index - nemosInventorySorting$getInventoryStartIndex();
-        var lockedSlot = new LockedSlot(index);
-
-        if (!LockedSlotsConfig.INSTANCE.remove(lockedSlot)) {
-            LockedSlotsConfig.INSTANCE.add(lockedSlot);
-        }
-
-        ConfigService.INSTANCE.writeConfig(true, LOCKED_SLOTS_CONFIG_PATH, LockedSlotsConfig.INSTANCE);
-        nemosInventorySorting$previousHoveredSlots.add(hoveredSlot);
-    }
-
-    @Unique
-    private boolean nemosInventorySorting$isLockableSlot(int index) { //TODO: Put into LockedService
-        var menu = nemosInventorySorting$getMenu();
-        var isInventoryMenu = menu instanceof InventoryMenu;
-        var isLockableInventoryIndex = index >= InventoryMenu.INV_SLOT_START && index < InventoryMenu.USE_ROW_SLOT_END;
-        var isLockableContainerInventoryIndex = index >= nemosInventorySorting$containerSize;
-
-        return (isInventoryMenu && isLockableInventoryIndex) || (!isInventoryMenu && isLockableContainerInventoryIndex);
     }
 
     @Inject(method = "extractContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractContainerScreen;extractSlots(Lnet/minecraft/client/gui/GuiGraphicsExtractor;II)V"))
