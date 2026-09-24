@@ -32,7 +32,8 @@ public class SplitQuickMoveService {
     }
 
     public void handleSplitQuickMove(AbstractContainerMenu menu, int slot) {
-        if (menu instanceof CreativeModeInventoryScreen.ItemPickerMenu) {
+        if (menu instanceof CreativeModeInventoryScreen.ItemPickerMenu
+                || FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, slot)) {
             return;
         }
 

@@ -22,6 +22,10 @@ public class ContainerItemTransferService {
     }
 
     public boolean transfer(AbstractContainerMenu menu, ContainerInputContext context, ScrollTransferTargetService.SlotTransfer transfer) {
+        if (FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(transfer.sourceSlot())
+                || FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(transfer.targetSlot())) {
+            return false;
+        }
         return transfer.result() ? transferResult(menu, context, transfer) : transferSingleItem(menu, context, transfer);
     }
 

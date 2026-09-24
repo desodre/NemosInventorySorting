@@ -31,7 +31,8 @@ public class ScrollTransferService {
     }
 
     public boolean handleSingleItemScrollMove(AbstractContainerMenu menu, int hoveredSlotIndex, double scrollDelta, boolean allowLastItem) {
-        if (!canTransfer(menu, hoveredSlotIndex, scrollDelta)) {
+        if (FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, hoveredSlotIndex)
+                || !canTransfer(menu, hoveredSlotIndex, scrollDelta)) {
             return false;
         }
 

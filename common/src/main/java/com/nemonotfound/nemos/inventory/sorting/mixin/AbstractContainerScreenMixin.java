@@ -18,6 +18,8 @@ import com.nemonotfound.nemos.inventory.sorting.models.config.LockedSlotsConfig;
 import com.nemonotfound.nemos.inventory.sorting.models.config.SettingsConfig;
 import com.nemonotfound.nemos.inventory.sorting.service.HoveredSlotRangeService;
 import com.nemonotfound.nemos.inventory.sorting.service.FavoriteSlotService;
+import com.nemonotfound.nemos.inventory.sorting.service.ContainerInputService;
+import com.nemonotfound.nemos.inventory.sorting.models.ContainerInputContext;
 import com.nemonotfound.nemos.inventory.sorting.service.InventoryService;
 import com.nemonotfound.nemos.inventory.sorting.service.ScrollTransferService;
 import com.nemonotfound.nemos.inventory.sorting.service.config.ConfigService;
@@ -56,10 +58,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -87,8 +87,6 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
     @Nullable
     protected Slot hoveredSlot;
 
-    @Unique
-    private final Set<Slot> nemosInventorySorting$previousHoveredSlots = new HashSet<>();
     @Unique
     private Slot nemosInventorySorting$previousHoveredSlot = null;
 
@@ -303,6 +301,10 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
         }
 
         var menu = nemosInventorySorting$getMenu();
+        if (FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, hoveredSlot.index)) {
+            cir.setReturnValue(true);
+            return;
+        }
         var shiftDown = minecraft.hasShiftDown();
         var scrollDelta = ScrollTransferService.resolveScrollDelta(scrollX, scrollY, shiftDown);
 
@@ -326,7 +328,6 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
         }
 
         InventoryService.getInstance().handleSplitQuickMove(nemosInventorySorting$getMenu(), hoveredSlot.index);
-        nemosInventorySorting$previousHoveredSlots.add(hoveredSlot);
         nemosInventorySorting$previousHoveredSlot = hoveredSlot;
         nemosInventorySorting$splitQuickMoveHandled = true;
         return true;
@@ -400,7 +401,8 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
         if (menu instanceof CreativeModeInventoryScreen.ItemPickerMenu) {
             menu.clicked(hoveredSlot.index, mouseInput, ContainerInput.QUICK_MOVE, player);
         } else {
-            minecraft.gameMode.handleContainerInput(menu.containerId, hoveredSlot.index, mouseInput, ContainerInput.QUICK_MOVE, player);
+            ContainerInputService.getInstance().bulkAction(menu, new ContainerInputContext(minecraft.gameMode, player),
+                    hoveredSlot.index, mouseInput, ContainerInput.QUICK_MOVE);
         }
 
         nemosInventorySorting$previousHoveredSlot = hoveredSlot;
@@ -420,7 +422,6 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
 
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
     private void mouseReleased(MouseButtonEvent event, CallbackInfoReturnable<Boolean> cir) {
-        nemosInventorySorting$previousHoveredSlots.clear();
         nemosInventorySorting$previousHoveredSlot = null;
         nemosInventorySorting$displayTooltip = true;
 

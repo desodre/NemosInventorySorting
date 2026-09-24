@@ -27,6 +27,9 @@ public class ScrollTransferTargetService {
     }
 
     public Optional<SlotTransfer> getTransfer(AbstractContainerMenu menu, int hoveredSlotIndex, double scrollDelta, boolean allowLastItem) {
+        if (FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, hoveredSlotIndex)) {
+            return Optional.empty();
+        }
         var sourceSlot = getSourceSlot(menu, hoveredSlotIndex, scrollDelta, allowLastItem);
         if (sourceSlot.isEmpty() || !canMoveFromSource(sourceSlot.get(), allowLastItem)) {
             return Optional.empty();
@@ -117,7 +120,8 @@ public class ScrollTransferTargetService {
     }
 
     private boolean canMoveFromSource(Slot sourceSlot, boolean allowLastItem) {
-        return !sourceSlot.getItem().isEmpty() && hasTransferableCount(sourceSlot.getItem(), shouldAllowLastItem(sourceSlot, allowLastItem));
+        return !FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(sourceSlot)
+                && !sourceSlot.getItem().isEmpty() && hasTransferableCount(sourceSlot.getItem(), shouldAllowLastItem(sourceSlot, allowLastItem));
     }
 
     private boolean canMoveToTarget(Slot targetSlot, ItemStack sourceStack) {
@@ -125,17 +129,20 @@ public class ScrollTransferTargetService {
     }
 
     private boolean canMoveToMatchingTarget(Slot targetSlot, ItemStack sourceStack) {
-        return !isResultSlot(targetSlot) && targetSlot.isActive() && targetSlot.mayPlace(sourceStack)
+        return !FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(targetSlot)
+                && !isResultSlot(targetSlot) && targetSlot.isActive() && targetSlot.mayPlace(sourceStack)
                 && ItemStack.isSameItemSameComponents(targetSlot.getItem(), sourceStack)
                 && targetSlot.getItem().getCount() < targetSlot.getMaxStackSize(sourceStack);
     }
 
     private boolean canMoveToEmptyTarget(Slot targetSlot, ItemStack sourceStack) {
-        return targetSlot.isActive() && targetSlot.mayPlace(sourceStack) && targetSlot.getItem().isEmpty();
+        return !FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(targetSlot)
+                && targetSlot.isActive() && targetSlot.mayPlace(sourceStack) && targetSlot.getItem().isEmpty();
     }
 
     private boolean canFitResult(Slot targetSlot, ItemStack resultStack) {
-        if (!targetSlot.isActive() || !targetSlot.mayPlace(resultStack)) {
+        if (FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(targetSlot)
+                || !targetSlot.isActive() || !targetSlot.mayPlace(resultStack)) {
             return false;
         }
 

@@ -147,6 +147,33 @@ class FavoriteActionsTest {
         verifyNoInteractions(input, resolver, context.gameMode());
     }
 
+    @Test
+    void scrollAndSplitNeverStartFromFavoriteSlots() {
+        assertThat(ScrollTransferService.getInstance().handleSingleItemScrollMove(menu, 0, 1, true)).isFalse();
+        assertThat(ScrollTransferTargetService.getInstance().getTransfer(menu, 0, -1, true)).isEmpty();
+        SplitQuickMoveService.getInstance().handleSplitQuickMove(menu, 0);
+        verifyNoInteractions(context.gameMode());
+        verify(inventory, never()).getItem(9);
+    }
+
+    @Test
+    void targetResolverExcludesFavoritesIncludingEmptyTemporaryStorage() {
+        var resolver = QuickMoveTargetResolver.getInstance();
+        assertThat(resolver.getAllSlots(menu)).containsExactly(1);
+        assertThat(resolver.getQuickMoveTargetSlots(menu, 1)).doesNotContain(0);
+        var source = addSlot(mock(Container.class), 0);
+        var carried = mock(ItemStack.class);
+        assertThat(ScrollTransferTargetService.getInstance()
+                .getTemporaryCarriedSlot(menu, carried, source.index, normal.index)).isEmpty();
+    }
+
+    @Test
+    void scrollTransferRejectsFavoriteDestinationBeforePickingUpSource() {
+        var transfer = new ScrollTransferTargetService.SlotTransfer(normal, favorite, false);
+        assertThat(ContainerItemTransferService.getInstance().transfer(menu, context, transfer)).isFalse();
+        verifyNoInteractions(context.gameMode());
+    }
+
     private Slot addSlot(Container container, int index) {
         var slot = new Slot(container, index, 0, 0);
         slot.index = menu.slots.size();

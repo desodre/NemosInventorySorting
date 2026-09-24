@@ -22,6 +22,12 @@ public class QuickMoveTargetResolver {
     }
 
     public List<Integer> getQuickMoveTargetSlots(AbstractContainerMenu menu, int sourceSlot) {
+        return resolveQuickMoveTargetSlots(menu, sourceSlot).stream()
+                .filter(index -> !FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, index))
+                .toList();
+    }
+
+    private List<Integer> resolveQuickMoveTargetSlots(AbstractContainerMenu menu, int sourceSlot) {
         if (menu instanceof InventoryMenu) {
             if (sourceSlot >= InventoryMenu.USE_ROW_SLOT_START && sourceSlot < InventoryMenu.USE_ROW_SLOT_END) {
                 return getSlotRange(InventoryMenu.INV_SLOT_START, InventoryMenu.INV_SLOT_END);
@@ -48,7 +54,7 @@ public class QuickMoveTargetResolver {
     }
 
     public List<Integer> getAllSlots(AbstractContainerMenu menu) {
-        return getSlotRange(0, menu.slots.size());
+        return FavoriteSlotService.INSTANCE.getUnfavoritedSlots(menu, 0, menu.slots.size());
     }
 
     private List<Integer> getSlotRange(int startInclusive, int endExclusive) {
