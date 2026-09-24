@@ -53,6 +53,10 @@ public class SlotSwapService {
     }
 
     private void swapItems(AbstractContainerMenu menu, int sourceSlot, int targetSlot) {
+        if (FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, sourceSlot)
+                || FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, targetSlot)) {
+            return;
+        }
         pickUpItem(menu, sourceSlot);
         pickUpItem(menu, targetSlot);
 

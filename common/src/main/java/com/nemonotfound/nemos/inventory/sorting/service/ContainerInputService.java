@@ -43,6 +43,20 @@ public class ContainerInputService {
     }
 
     public void pickup(AbstractContainerMenu menu, ContainerInputContext context, int slot, int mouseButton) {
+        if (FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, slot)) {
+            return;
+        }
         context.gameMode().handleContainerInput(menu.containerId, slot, mouseButton, ContainerInput.PICKUP, context.player());
+    }
+
+    public void bulkAction(AbstractContainerMenu menu, ContainerInputContext context, int slot, int button, ContainerInput input) {
+        if (FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, slot)) {
+            return;
+        }
+        if (input == ContainerInput.QUICK_MOVE) {
+            new FavoriteQuickMoveService(this, QuickMoveTargetResolver.getInstance()).move(menu, context, slot, button);
+        } else {
+            context.gameMode().handleContainerInput(menu.containerId, slot, button, input, context.player());
+        }
     }
 }

@@ -34,6 +34,7 @@ public class MergingService {
 
     public boolean mergeAllItems(AbstractContainerMenu menu, List<SlotItem> sortedSlotItems) {
         var groupedItemMap = sortedSlotItems.stream()
+                .filter(slotItem -> !FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, slotItem.slotIndex()))
                 .filter(slotItem -> slotItem.itemStack().getMaxStackSize() > 1)
                 .collect(groupingBy(slotItem -> ItemGroup.from(slotItem.itemStack())));
 

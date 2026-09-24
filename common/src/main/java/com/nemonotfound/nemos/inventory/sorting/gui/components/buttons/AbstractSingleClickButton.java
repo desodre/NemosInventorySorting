@@ -3,7 +3,9 @@ package com.nemonotfound.nemos.inventory.sorting.gui.components.buttons;
 import com.nemonotfound.nemos.inventory.sorting.models.Position;
 import com.nemonotfound.nemos.inventory.sorting.models.Size;
 import com.nemonotfound.nemos.inventory.sorting.models.SlotRange;
-import com.nemonotfound.nemos.inventory.sorting.service.LockedSlotService;
+import com.nemonotfound.nemos.inventory.sorting.service.FavoriteSlotService;
+import com.nemonotfound.nemos.inventory.sorting.service.ContainerInputService;
+import com.nemonotfound.nemos.inventory.sorting.models.ContainerInputContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -42,7 +44,7 @@ public abstract class AbstractSingleClickButton extends AbstractContainerButton 
         if (gameMode != null) {
             Consumer<Integer> function = isCreativeModeMenu ?
                     (slotIndex) -> menu.clicked(slotIndex, button, containerInput, player) :
-                    (slotIndex) -> gameMode.handleContainerInput(containerId, slotIndex, button, containerInput, player);
+                    (slotIndex) -> ContainerInputService.getInstance().bulkAction(menu, new ContainerInputContext(gameMode, player), slotIndex, button, containerInput);
 
             triggerClickForAllItems(slotItems, function);
         }
@@ -58,7 +60,7 @@ public abstract class AbstractSingleClickButton extends AbstractContainerButton 
         var slots = menu.slots;
 
         return IntStream.range(startIndex, getEndIndex())
-                .filter(index -> !LockedSlotService.INSTANCE.isLocked(index, startIndex))
+                .filter(index -> !FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, index))
                 .mapToObj(slotIndex -> Map.entry(slotIndex, slots.get(slotIndex).getItem()))
                 .filter(itemStackEntry -> !itemStackEntry.getValue().is(Items.AIR))
                 .map(Map.Entry::getKey)

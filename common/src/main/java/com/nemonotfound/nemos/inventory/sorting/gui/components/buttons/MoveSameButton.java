@@ -4,7 +4,7 @@ import com.nemonotfound.nemos.inventory.sorting.client.SortingKeyMappings;
 import com.nemonotfound.nemos.inventory.sorting.models.Position;
 import com.nemonotfound.nemos.inventory.sorting.models.Size;
 import com.nemonotfound.nemos.inventory.sorting.models.SlotRange;
-import com.nemonotfound.nemos.inventory.sorting.service.LockedSlotService;
+import com.nemonotfound.nemos.inventory.sorting.service.FavoriteSlotService;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.NonNullList;
@@ -70,7 +70,7 @@ public class MoveSameButton extends AbstractSingleClickButton {
         var itemsOutOfIndexRange = getItemsOutOfIndexRange(slots, startIndex, endIndex);
 
         return IntStream.range(startIndex, endIndex)
-                .filter(index -> !LockedSlotService.INSTANCE.isLocked(index, startIndex))
+                .filter(index -> !FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, index))
                 .mapToObj(slotIndex -> Map.entry(slotIndex, slots.get(slotIndex).getItem()))
                 .filter(itemStackEntry -> isItemInOtherContainer(itemStackEntry.getValue(), itemsOutOfIndexRange))
                 .map(Map.Entry::getKey)

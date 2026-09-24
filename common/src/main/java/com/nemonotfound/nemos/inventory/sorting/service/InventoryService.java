@@ -32,11 +32,14 @@ public class InventoryService {
     }
 
     public void handleSorting(AbstractContainerMenu menu, int startIndex, int endIndex) { //TODO: Improve efficiency
+        if (!menu.getCarried().isEmpty()) {
+            return;
+        }
         var slotItemsToMerge = sortingService.sortSlotItems(menu, startIndex, endIndex);
         var mergedItems = mergeService.mergeAllItems(menu, slotItemsToMerge);
 
         var slotItemsToSort = mergedItems ? sortingService.sortSlotItems(menu, startIndex, endIndex) : slotItemsToMerge;
-        var slotSwapMap = sortingService.retrieveSlotSwaps(slotItemsToSort, startIndex, endIndex);
+        var slotSwapMap = sortingService.retrieveSlotSwaps(menu, slotItemsToSort, startIndex, endIndex);
         sortingService.sortItemsInInventory(menu, slotSwapMap);
     }
 

@@ -21,7 +21,7 @@ public class SortingService {
     private final ComparingService comparingService;
     private final Minecraft minecraft;
 
-    private SortingService(SlotSwapService slotSwapService, ComparingService comparingService, Minecraft minecraft) {
+    SortingService(SlotSwapService slotSwapService, ComparingService comparingService, Minecraft minecraft) {
         this.slotSwapService = slotSwapService;
         this.comparingService = comparingService;
         this.minecraft = minecraft;
@@ -38,7 +38,7 @@ public class SortingService {
 
     public @NotNull List<SlotItem> sortSlotItems(AbstractContainerMenu menu, int startIndex, int endIndex) {
         var slotItems = IntStream.range(startIndex, endIndex)
-                .filter(index -> !LockedSlotService.INSTANCE.isLocked(index, startIndex))
+                .filter(index -> !FavoriteSlotService.INSTANCE.isFavoritePlayerSlot(menu, index))
                 .mapToObj(index -> new SlotItem(index, menu.slots.get(index).getItem()))
                 .filter(slotItem -> !slotItem.itemStack().isEmpty())
                 .toList();
@@ -46,9 +46,9 @@ public class SortingService {
         return comparingService.sort(slotItems);
     }
 
-    public Map<Integer, Integer> retrieveSlotSwaps(List<SlotItem> slotItems, int startIndex, int endIndex) {
+    public Map<Integer, Integer> retrieveSlotSwaps(AbstractContainerMenu menu, List<SlotItem> slotItems, int startIndex, int endIndex) {
         Map<Integer, Integer> slotSwapMap = new LinkedHashMap<>();
-        List<Integer> unlockedSlots = LockedSlotService.INSTANCE.getUnlockedSlots(startIndex, endIndex);
+        List<Integer> unlockedSlots = FavoriteSlotService.INSTANCE.getUnfavoritedSlots(menu, startIndex, endIndex);
 
         for (int i = 0; i < slotItems.size(); i++) {
             int newIndex = unlockedSlots.get(i);
