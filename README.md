@@ -16,6 +16,13 @@ To sort, drop or move items, simply click the buttons or set custom key binds an
 In the player inventory, clicking the buttons does not include the hotbar. To include the hotbar, Shift-click (or Shift + key bind). <br>
 To search for an item, simply click the search bar and start typing!
 
+### Favorite inventory slots (Minecraft 1.21.1 build)
+Hold Alt and right-click a player inventory or hotbar slot to toggle its small star.
+Favorites are saved by slot position and stay put when this mod sorts, moves, or drops items.
+The mod's Move All and Move Same buttons will not put items into favorite slots either.
+You can still move a favorite manually with the mouse; vanilla actions such as Q and ordinary shift-click are not intercepted.
+The Fabric and NeoForge builds for 1.21.1 are separate from builds for newer Minecraft versions.
+
 ### DISCLAIMER <br>
 This mod works on the **client side only**, which gives you an advantage over other players. <br>
 I cannot guarantee that you won’t get banned from public servers for using it. <br>
