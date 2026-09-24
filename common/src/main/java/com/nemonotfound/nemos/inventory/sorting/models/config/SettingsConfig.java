@@ -9,6 +9,7 @@ public class SettingsConfig {
     private boolean enableSplitQuickMove = true;
     private boolean enableScrollTransfer = true;
     private boolean enableSlotLocking = true;
+    private Boolean enableFavorites;
     private Boolean enableKeyMappings = true;
     private Boolean enableHoverKeyMappings = true;
     private Boolean enableContainerKeyMappings = true;
@@ -38,6 +39,10 @@ public class SettingsConfig {
 
     public boolean isSlotLockingEnabled() {
         return enableSlotLocking;
+    }
+
+    public boolean areFavoritesEnabled() {
+        return enableFavorites == null ? enableSlotLocking : enableFavorites;
     }
 
     public boolean areKeyMappingsEnabled() {
