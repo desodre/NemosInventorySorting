@@ -22,6 +22,8 @@ import static com.nemonotfound.nemos.inventory.sorting.Constants.MOD_ID;
 public abstract class FavoriteSlotRenderMixin {
     @Unique
     private static final ResourceLocation FAVORITE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "container/favorite_slot");
+    @Unique
+    private Slot nemosInventorySorting$renderingSlot;
 
     @Unique
     private boolean nemosInventorySorting$isFavorite(Slot slot) {
@@ -29,12 +31,22 @@ public abstract class FavoriteSlotRenderMixin {
                 && FavoriteSlotService.INSTANCE.isFavorite(slot);
     }
 
-    @WrapOperation(method = "renderSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;renderItemDecorations(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V"))
+    @Inject(method = "renderSlot", at = @At("HEAD"))
+    private void nemosInventorySorting$startSlot(GuiGraphics graphics, Slot slot, CallbackInfo ci) {
+        nemosInventorySorting$renderingSlot = slot;
+    }
+
+    @Inject(method = "renderSlot", at = @At("RETURN"))
+    private void nemosInventorySorting$finishSlot(GuiGraphics graphics, Slot slot, CallbackInfo ci) {
+        nemosInventorySorting$renderingSlot = null;
+    }
+
+    @WrapOperation(method = {"renderSlot", "renderSlotContents"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;renderItemDecorations(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V"))
     private void nemosInventorySorting$makeRoomForStar(
             GuiGraphics graphics, Font font, ItemStack stack, int x, int y, String count,
-            Operation<Void> original, GuiGraphics guiGraphics, Slot slot
+            Operation<Void> original
     ) {
-        if (!nemosInventorySorting$isFavorite(slot)) {
+        if (!nemosInventorySorting$isFavorite(nemosInventorySorting$renderingSlot)) {
             original.call(graphics, font, stack, x, y, count);
             return;
         }
