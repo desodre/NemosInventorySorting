@@ -8,6 +8,7 @@
     "AbstractContainerScreenMixin",
     "AbstractRecipeBookScreenMixin",
     "ContainerFilterMixin",
+    "FavoriteSlotRenderMixin",
     "EditBoxMixin",
     "InventoryScreenMixin"
   ],
@@ -16,4 +17,3 @@
     "defaultRequire": 1
   }
 }
-

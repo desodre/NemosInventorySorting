@@ -9,7 +9,6 @@ import com.nemonotfound.nemos.inventory.sorting.gui.components.buttons.AbstractC
 import com.nemonotfound.nemos.inventory.sorting.helper.ButtonTypeMapping;
 import com.nemonotfound.nemos.inventory.sorting.helper.FilterBoxGetter;
 import com.nemonotfound.nemos.inventory.sorting.helper.SortingWidgetGetter;
-import com.nemonotfound.nemos.inventory.sorting.models.LockedSlot;
 import com.nemonotfound.nemos.inventory.sorting.models.Offset;
 import com.nemonotfound.nemos.inventory.sorting.models.Position;
 import com.nemonotfound.nemos.inventory.sorting.models.Size;
@@ -30,9 +29,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.BlastFurnaceMenu;
 import net.minecraft.world.inventory.BrewingStandMenu;
@@ -76,9 +73,6 @@ import static com.nemonotfound.nemos.inventory.sorting.service.ContainerInputSer
 @Mixin(AbstractContainerScreen.class)
 public abstract class AbstractContainerScreenMixin extends Screen implements SortingWidgetGetter {
 
-    @Unique
-    private static final Identifier LOCKED_SLOT = Identifier.fromNamespaceAndPath(MOD_ID, "container/locked_slot");
-
     @Shadow
     protected int leftPos;
     @Shadow
@@ -108,8 +102,6 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
     @Unique
     private final List<AbstractWidget> nemosInventorySorting$widgets = new ArrayList<>();
 
-    @Unique
-    private boolean nemosInventorySorting$displayLockedSlots = false;
     @Unique
     private boolean nemosInventorySorting$displayTooltip = true;
     @Unique
@@ -163,13 +155,6 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
             cir.setReturnValue(true);
         }
 
-        if (
-                SettingsConfig.INSTANCE.isSlotLockingEnabled()
-                        && event.hasAltDown()
-                        && !((Screen) this instanceof CreativeModeInventoryScreen)
-        ) {
-            nemosInventorySorting$displayLockedSlots = true;
-        }
     }
 
     @Unique
@@ -185,10 +170,6 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
     public boolean keyReleased(@NotNull KeyEvent keyEvent) {
         if (nemosInventorySorting$isSearchInactive() && nemosInventorySorting$handleWidgetInput(widget -> widget.keyReleased(keyEvent))) {
             return true;
-        }
-
-        if (!keyEvent.hasAltDown()) {
-            nemosInventorySorting$displayLockedSlots = false;
         }
 
         return super.keyReleased(keyEvent);
@@ -459,26 +440,6 @@ public abstract class AbstractContainerScreenMixin extends Screen implements Sor
         if (!nemosInventorySorting$displayTooltip) {
             ci.cancel();
         }
-    }
-
-    @Inject(method = "extractContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractContainerScreen;extractSlots(Lnet/minecraft/client/gui/GuiGraphicsExtractor;II)V"))
-    void renderHighlightedSlot(GuiGraphicsExtractor guiGraphicsExtractor, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
-        if (!SettingsConfig.INSTANCE.isSlotLockingEnabled() || !nemosInventorySorting$displayLockedSlots) {
-            return;
-        }
-
-        for (LockedSlot lockedSlot : LockedSlotsConfig.INSTANCE.getLockedSlots()) {
-            var menu = nemosInventorySorting$getMenu();
-            var slot = menu.getSlot(lockedSlot.index() + nemosInventorySorting$getInventoryStartIndex());
-
-            guiGraphicsExtractor.blitSprite(RenderPipelines.GUI_TEXTURED, LOCKED_SLOT, slot.x, slot.y, 16, 16);
-        }
-    }
-
-    @Unique
-    private int nemosInventorySorting$getInventoryStartIndex() {
-        return nemosInventorySorting$getMenu() instanceof InventoryMenu ?
-                InventoryMenu.INV_SLOT_START : nemosInventorySorting$containerSize;
     }
 
     @Unique
